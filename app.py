@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template
 from suggest import suggest, suggest_list
 import requests
 import os
+import re
 
 app = Flask(__name__)
 
@@ -29,9 +30,31 @@ def get_definition(word):
     word = word.lower()
     def_url = MW_URL.format(word = word, key = MW_KEY)
     res = requests.get(def_url)
-    matches = [defn for defn in res.json() if (defn['meta']['id']).split(':')[0] == word]
+
+    if isinstance(res, list):
+        return jsonify(['test'])
+
+    matches = []
+    for defn in res.json():
+        if not isinstance(defn, dict):  # no result found returns a list of strings
+            return jsonify([])
+        if not defn['shortdef']:
+            continue
+        elif (defn['meta']['id']).split(':')[0] == word:
+            matches.append(defn)
+
     if not matches:
-        matches = res.json() # fallback on everything
+        matches = [m for m in res.json() if m['shortdef']]  # fallback on everything with a def
+
     for m in matches:
+        # add a cleaned 'word' to each defn dict
         m['word'] = m['meta']['id'].split(':')[0]
+
+        # cleanup shortdef
+        shortdefs = m['shortdef']
+        def_str = ''
+        for i, sd in enumerate(shortdefs):
+            def_str += f'{i+1}. {sd}<br><br>'
+        m['definition_str'] = def_str
+
     return jsonify(matches)

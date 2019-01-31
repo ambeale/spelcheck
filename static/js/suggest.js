@@ -5,7 +5,7 @@ let selectedId = 0;
 let resultsDisplayed = 0;
 
 const itemClick = function(event) {
-  let word = event.target.innerHTML;
+  let word = event.target.value;
   inputBox.value = word;
   getDefinition(word);
 }
@@ -36,7 +36,7 @@ const writeDefinitions = function(definitions) {
        '<div class="card-body">' +
           '<h5 class="card-title">' + definitions[i]['word'] + '</h5>' +
           '<h6 class="card-subtitle mb-2 text-muted">' + definitions[i]['fl'] + '</h6>' +
-          '<p class="card-text">' + definitions[i]['shortdef']+ '</p>' +
+          '<p class="card-text">' + definitions[i]['definition_str']+ '</p>' +
         '</div>' +
       '</div>'
       ;
@@ -48,6 +48,7 @@ const getSuggestion = function(event) {
     return;
   $("#suggestion-list").empty();
   let inputWord = inputBox.value;
+
   selectedId = 0;
   document.querySelector('#suggestion-list').innerHTML = '';
   $("#definitions").empty();
@@ -56,6 +57,8 @@ const getSuggestion = function(event) {
 
 const getDefinition = function() {
   let inputWord = inputBox.value;
+  if (!inputWord)
+    return;
   document.querySelector('#suggestion-list').innerHTML = '';
   $("#definitions").empty();
   $.get('/define/' + inputWord + '.json', success=writeDefinitions);
